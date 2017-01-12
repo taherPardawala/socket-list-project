@@ -1,0 +1,16 @@
+{
+  "name": "socchat",
+  "version": "1.0.0",
+  "description": "socket and express chat",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "taher",
+  "license": "ISC",
+  "dependencies": {
+    "dynamic-array": "^1.0.35",
+    "express": "^4.14.0",
+    "socket.io": "^1.7.2"
+  }
+}

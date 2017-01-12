@@ -1,0 +1,127 @@
+<html>
+<head>
+    <title>Chat app using express and socket</title>
+    <style>
+        #chatbox{
+            height : 500px;
+            overflow: scroll;
+        }
+        
+        #chatbox ul{
+            list-style: none;
+            margin: 0;
+            padding-left: 0px;
+        }
+        
+        .redborder{
+            border: 1px red solid;
+            padding: 5px;
+        }
+        
+        .deleteMe{
+            float: right;
+            background: yellow;
+        }
+        
+        #chatContainer{
+            display: none;
+        }
+        
+        #chatWrap{
+            float:left;
+            border: 1px solid;
+        }
+    </style>
+</head>
+<body>
+    
+    <div id="userWrap">
+        <p>Enter a username</p>
+        <p id="userError"></p>
+        <form id="setUsername">
+            <input size="35" id="namebox"/>
+            <input type="submit"/>
+        </form>
+    </div>
+    
+    <div id="chatContainer">
+        <div id="chatWrap">
+            <div id = "chatbox">
+                <ul></ul>
+            </div>
+            <form id = "sent-message">
+                <input size = "35" id = "message" />
+                <input type = "submit" />
+            </form>
+        </div>
+        <div id="users"></div>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.1.1.js" integrity="sha256-16cdPddA6VdVInumRGo6IbivbERE8p7CQR3HzTBuELA=" crossorigin="anonymous"></script>
+    <script src = "/socket.io/socket.io.js"></script>
+    <script>
+        jQuery(function($){
+            var socket = io.connect();
+            var id = "";
+            var userWrap = $('#userWrap'),
+                error = $('#userError'),
+                setname = $('#setUsername'),
+                name = $('#namebox'),
+                chatCon = $('#chatContainer'),
+                userbox = $('#users');
+            
+            var msgform = $('#sent-message');
+            var msgbox = $('#message');
+            var chatbox = $('#chatbox'),
+                chatlist = $('#chatbox ul');
+            name.focus();
+            setname.submit(function(e){
+                e.preventDefault();
+                socket.emit('new user',name.val(),function(data){
+                                console.log(data);
+                                if(data){
+                                    userWrap.hide();
+                                    chatCon.css('display','block');
+                                    msgbox.focus();
+                                }
+                                else {
+                                    error.html('User name is already taken try again');
+                                }
+                            });
+                name.val('')
+            });
+            
+            socket.on('username' , function(data){
+                    var html = "";
+                    for(i=0 ; i<data.length; i++){
+                        html += data[i] + '<br/>'
+                    }
+                    userbox.html(html);
+            });
+            msgform.submit(function(e){
+                e.preventDefault();
+                socket.emit('send message' , msgbox.val());
+                msgbox.val('');
+            });
+            
+            socket.on('new message' , function(data){
+                chatlist.append('<li class="redborder" id="'+ data.id +'"> <b>'+ data.name +': </b>' +data.msg + '<button class="deleteMe">Remove</button> </li>');
+            });
+            
+            $(document).on('click','.deleteMe',function(){
+                console.log("button clicked")
+                id = $(this).parent().attr("id")
+                $(this).parent().remove();
+                socket.emit('bought item' , id);
+            });
+            
+            socket.on('remove item' , function(data){
+                console.log("REmove item client" + data);
+                 $("#"+data).parent().remove();
+            });
+            
+        });
+    
+    </script>
+</body>
+</html>
