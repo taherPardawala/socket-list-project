@@ -1,0 +1,51 @@
+
+<!--<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.0/angular.min.js" >
+</script>-->
+
+<script type="text/javascript" src="angular.js" >
+</script>
+
+<script> 
+var app = angular.module('sample',[]);
+
+var s1 = function($scope){
+    $scope.i= 0;
+    $scope.carslist = ['maruti','pluto','neptune']
+    $scope.addCar = ()=>{
+        const acar = $scope.name ;
+        $scope.name = '' ;
+        $scope.carslist.push(acar);
+    }
+}
+
+app.controller('s1',s1);
+
+</script>
+<div ng-app='sample' ng-controller="s1">
+Demo 1 of awesomeness :
+<br />
+
+type a number here
+<input ng-model='i' ></input>
+<br />
+<span> Square is : {{i*i}} </span> 
+
+<br />
+Demo 3 of awesomeness :
+<br />
+
+type a name here
+<input ng-model='name' ></input>
+<br />
+<span> look : {{name}} </span> 
+<button ng-click='addCar()' value="Add"> Push Down </button>
+<br />
+
+Demo 2 of awesomeness :
+<br />
+<ul>
+
+   <li ng-repeat="car in carslist">{{car}}</li>
+
+</ui>   
+</div>
