@@ -27,12 +27,19 @@
             float:left;
             border: 1px solid;
         }
+        
+        #users {
+            border: 1px solid red;
+            display: block;
+            float: left;
+            width: 200px;
+        }
     </style>
     
 </head>
 <body>
     
-    <div id="userWrap" ng-controller="userController" ng-show="userVis">
+    <div id="userWrap" ng-controller="userController" ng-show ="visible">
         <p>Enter a username</p>
         <p id="userError" ng-model="errormsg">{{errormsg}}</p>
         <form id="setUsername">
@@ -41,17 +48,23 @@
         </form>
     </div>
     
-    <div id="chatContainer" ng-controller="chatController" ng-show="chatVis">
+    <div id="chatContainer" ng-controller="chatController" ng-show="visible">
         <div id="chatWrap">
             <div id = "chatbox">
-                <ul></ul>
+                <ul>
+                    <li ng-repeat="msg in msglist">{{msg}}</li>
+                </ul>
             </div>
             <form id = "sent-message">
-                <input size = "35" id = "message" />
-                <input type = "submit" />
+                <input size = "35" id = "message" ng-model="newmsg"/>
+                <input type = "submit" ng-click="sendMsg($event)"/>
             </form>
         </div>
-        <div id="users"></div>
+        <div id="users">
+            <ul>
+                <li class="redborder" ng-repeat="user in usernames">{{user.name}} : {{user.msg}}</li>
+            </ul>
+        </div>
     </div>
     
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
@@ -63,33 +76,50 @@
         var app = angular.module('list',[]);
         
         var userController = function($scope){
-            
-            $scope.$emit('chatbox vis' , false);
-            $scope.userVis = true;
+            socket.emit('update chat vis' , false);
+            $scope.visible = true;
             
             $scope.setName = (e)=>{
                 e.preventDefault();
                 socket.emit('new user', $scope.username ,function(data){
-                                console.log("in callback of newuser");
-                                console.log(data);
-                                console.log(typeof data);
-                                if(true){
-                                    console.log('omkar')
-                                    $scope.userVis = false;
-                                    $scope.$emit('chatbox vis' , true);
+                                
+                                if(data){
+                                    console.log(data);
+                                    $scope.visible = false;
+                                    socket.emit('update chat vis' , true);
                                 }
                                 else {
                                     $scope.errormsg = "Username is already taken";
                                 }
                             });
                     $scope.username = "";
-            }
+            };
+            socket.on('username' , function(data){
+                var usernames = data;
+                $scope.usernames = usernames;
+                //console.log($scope.usernames);
+            });
         };
         
         var chatController = function($scope){
-            $scope.$on('chatbox vis',function(data){
-                $scope.chatVis = data;
+            
+            $scope.msglist = [];
+            socket.on('chatbox vis',function(data){
+                $scope.visible = data;
                 console.log("chat box: "+data)
+            });
+            
+            $scope.sendMsg = (e)=>{
+                e.preventDefault();
+                socket.emit('send message' , $scope.newmsg);
+                //$scope.msglist.push($scope.msg)
+                $scope.newmsg = "";
+            };
+            
+            socket.on('new message' , function(data){
+                console.log(data);
+                $scope.msglist = data;
+                //chatlist.append('<li class="redborder" id="'+ data.id +'"> <b>'+ data.name +': </b>' +data.msg + '<button class="deleteMe">Remove</button> </li>');
             });
         };
         
