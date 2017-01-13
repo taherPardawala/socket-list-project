@@ -1,4 +1,4 @@
-<html>
+<html ng-app="list">
 <head>
     <title>Chat app using express and socket</title>
     <style>
@@ -23,28 +23,25 @@
             background: yellow;
         }
         
-        #chatContainer{
-            display: none;
-        }
-        
         #chatWrap{
             float:left;
             border: 1px solid;
         }
     </style>
+    
 </head>
 <body>
     
-    <div id="userWrap">
+    <div id="userWrap" ng-controller="userController" ng-show="userVis">
         <p>Enter a username</p>
-        <p id="userError"></p>
+        <p id="userError" ng-model="errormsg">{{errormsg}}</p>
         <form id="setUsername">
-            <input size="35" id="namebox"/>
-            <input type="submit"/>
+            <input size="35" id="namebox" ng-model = "username"/>
+            <input type="submit" ng-click="setName($event)"/>
         </form>
     </div>
     
-    <div id="chatContainer">
+    <div id="chatContainer" ng-controller="chatController" ng-show="chatVis">
         <div id="chatWrap">
             <div id = "chatbox">
                 <ul></ul>
@@ -57,71 +54,46 @@
         <div id="users"></div>
     </div>
     
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.1.1.js" integrity="sha256-16cdPddA6VdVInumRGo6IbivbERE8p7CQR3HzTBuELA=" crossorigin="anonymous"></script>
     <script src = "/socket.io/socket.io.js"></script>
+    
     <script>
-        jQuery(function($){
-            var socket = io.connect();
-            var id = "";
-            var userWrap = $('#userWrap'),
-                error = $('#userError'),
-                setname = $('#setUsername'),
-                name = $('#namebox'),
-                chatCon = $('#chatContainer'),
-                userbox = $('#users');
+        var socket = io.connect();
+        var app = angular.module('list',[]);
+        
+        var userController = function($scope){
             
-            var msgform = $('#sent-message');
-            var msgbox = $('#message');
-            var chatbox = $('#chatbox'),
-                chatlist = $('#chatbox ul');
-            name.focus();
-            setname.submit(function(e){
+            $scope.$emit('chatbox vis' , false);
+            $scope.userVis = true;
+            
+            $scope.setName = (e)=>{
                 e.preventDefault();
-                socket.emit('new user',name.val(),function(data){
+                socket.emit('new user', $scope.username ,function(data){
                                 console.log(data);
-                                if(data){
-                                    userWrap.hide();
-                                    chatCon.css('display','block');
-                                    msgbox.focus();
+                                if(true){
+                                    $scope.userVis = false;
+                                    $scope.$emit('chatbox vis' , true);
                                 }
                                 else {
-                                    error.html('User name is already taken try again');
+                                    $scope.errormsg = "Username is already taken";
                                 }
                             });
-                name.val('')
+                    $scope.username = "";
+            }
+        };
+        
+        var chatController = function($scope){
+            $scope.$on('chatbox vis',function(data){
+                $scope.chatVis = data;
+                console.log("chat box: "+data)
             });
-            
-            socket.on('username' , function(data){
-                    var html = "";
-                    for(i=0 ; i<data.length; i++){
-                        html += data[i] + '<br/>'
-                    }
-                    userbox.html(html);
-            });
-            msgform.submit(function(e){
-                e.preventDefault();
-                socket.emit('send message' , msgbox.val());
-                msgbox.val('');
-            });
-            
-            socket.on('new message' , function(data){
-                chatlist.append('<li class="redborder" id="'+ data.id +'"> <b>'+ data.name +': </b>' +data.msg + '<button class="deleteMe">Remove</button> </li>');
-            });
-            
-            $(document).on('click','.deleteMe',function(){
-                console.log("button clicked")
-                id = $(this).parent().attr("id")
-                $(this).parent().remove();
-                socket.emit('bought item' , id);
-            });
-            
-            socket.on('remove item' , function(data){
-                console.log("REmove item client" + data);
-                 $("#"+data).parent().remove();
-            });
-            
-        });
-    
+        };
+        
+        
+        app.controller("userController" , userController);
+        app.controller("chatController" , chatController);
+        
     </script>
 </body>
 </html>
