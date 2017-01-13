@@ -70,8 +70,11 @@
             $scope.setName = (e)=>{
                 e.preventDefault();
                 socket.emit('new user', $scope.username ,function(data){
+                                console.log("in callback of newuser");
                                 console.log(data);
+                                console.log(typeof data);
                                 if(true){
+                                    console.log('omkar')
                                     $scope.userVis = false;
                                     $scope.$emit('chatbox vis' , true);
                                 }

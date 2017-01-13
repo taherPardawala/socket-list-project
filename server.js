@@ -5,7 +5,9 @@ var express = require('express'),
 
 var namelist = []//require('dynamic-array').DynamicArray();
 
-server.listen(3000);
+server.listen(3000,()=>{
+    console.log(' localhost:3000');
+});
 
 app.get('/' , function(req , res){
    res.sendFile(__dirname + '/index.html'); 
