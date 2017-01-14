@@ -1,0 +1,134 @@
+<script>
+        jQuery(function($){
+            var socket = io.connect();
+            var id = "";
+            var userWrap = $('#userWrap'),
+                error = $('#userError'),
+                setname = $('#setUsername'),
+                name = $('#namebox'),
+                chatCon = $('#chatContainer'),
+                userbox = $('#users');
+            
+            var msgform = $('#sent-message');
+            var msgbox = $('#message');
+            var chatbox = $('#chatbox'),
+                chatlist = $('#chatbox ul');
+            name.focus();
+            setname.submit(function(e){
+                e.preventDefault();
+                socket.emit('new user',name.val(),function(data){
+                                console.log(data);
+                                if(data){
+                                    userWrap.hide();
+                                    chatCon.css('display','block');
+                                    msgbox.focus();
+                                }
+                                else {
+                                    error.html('User name is already taken try again');
+                                }
+                            });
+                name.val('')
+            });
+            
+            socket.on('username' , function(data){
+                    var html = "";
+                    for(i=0 ; i<data.length; i++){
+                        html += data[i] + '<br/>'
+                    }
+                    userbox.html(html);
+            });
+            msgform.submit(function(e){
+                e.preventDefault();
+                socket.emit('send message' , msgbox.val());
+                msgbox.val('');
+            });
+            
+            socket.on('new message' , function(data){
+                chatlist.append('<li class="redborder" id="'+ data.id +'"> <b>'+ data.name +': </b>' +data.msg + '<button class="deleteMe">Remove</button> </li>');
+            });
+            
+            $(document).on('click','.deleteMe',function(){
+                console.log("button clicked")
+                id = $(this).parent().attr("id")
+                $(this).parent().remove();
+                socket.emit('bought item' , id);
+            });
+            
+            socket.on('remove item' , function(data){
+                console.log("REmove item client" + data);
+                 $("#"+data).remove();
+            });
+            
+        });
+    
+    </script>
+    
+    /*
+msglist.each(function(item){
+        socket.emit('init chat' , item);
+    });
+    
+    jQuery
+    $(document).ready(function(){
+    $(".deleteMe").on("click", function(){
+       $(this).closest("li").remove(); 
+    });
+});
+
+
+    html
+    <ul>
+        <li>item one <div class='deleteMe'>X</div></li>
+        <li>item two <div class='deleteMe'>X</div></li>
+        <li>item three <div class='deleteMe'>X</div></li>
+        <li>item four <div class='deleteMe'>X</div></li>
+        <li>item five <div class='deleteMe'>X</div></li>
+        <li>item six <div class='deleteMe'>X</div></li>
+        <li>item seven <div class='deleteMe'>X</div></li>
+        <li>item eight <div class='deleteMe'>X</div></li>
+        <li>item nine <div class='deleteMe'>X</div></li>
+    </ul>
+    
+    css
+    ul li{
+        list-style: none;
+        background: gray;
+        margin: 2px;
+        border-raius: 5px;
+        padding: 5px;
+    }
+    
+    .deleteMe{
+        float: right;
+        background: yellow;
+    }
+    jason.stringify
+    
+    <ul class="cg-tag-list" >
+        <li ng-repeat="tag in list">
+          <span>{{tag}}</span>
+          <img src="" ng-click="fnRemoveTag(tag)"/>
+       </li>
+    </ul> 
+
+    $scope.fnRemoveTag = function (tag) {
+    // get the index of the tag which we are going to remove
+    var index = $scope.list.indexOf(tag);
+
+    // remove that tag from the `list` array
+    $scope.list.splice(index, 1);
+
+    //this will automatically update the dom for you
+    }
+    ng-click="remove($event);"
+    $scope.remove = function(e){
+        console.log(e.target); // you can see button in console
+        $(e.target).parent().remove();
+    }
+*/
+
+
+#chatContainer{
+            display: none;
+        }
+        

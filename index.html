@@ -13,6 +13,16 @@
             padding-left: 0px;
         }
         
+        #grocerbox ul{
+            list-style: none;
+            margin: 0;
+            padding-left: 0px;
+            height: 537px;
+            width: 278px;
+            border: 1px solid;
+            float: left;
+        }
+        
         .redborder{
             border: 1px red solid;
             padding: 5px;
@@ -28,11 +38,26 @@
             border: 1px solid;
         }
         
-        #users {
-            border: 1px solid red;
+        #users ul{
             display: block;
             float: left;
             width: 200px;
+            list-style: none;
+        }
+        
+        #users ul li{
+            border: 1px solid red;
+        }
+        
+        #gusers ul{
+            display: block;
+            float: left;
+            width: 200px;
+            list-style: none;
+        }
+        
+        #gusers ul li{
+            border: 1px solid red;
         }
     </style>
     
@@ -48,11 +73,11 @@
         </form>
     </div>
     
-    <div id="chatContainer" ng-controller="chatController" ng-show="visible">
+    <div id="chatContainer" ng-controller="chatController"  ng-show="visibleChef">
         <div id="chatWrap">
             <div id = "chatbox">
                 <ul>
-                    <li ng-repeat="msg in msglist">{{msg}}</li>
+                    <li ng-repeat="message in msglist">{{message.name}} : {{message.msg}} <button class="deleteMe" ng-click="removeItem($index)">Remove</button></li>
                 </ul>
             </div>
             <form id = "sent-message">
@@ -62,10 +87,26 @@
         </div>
         <div id="users">
             <ul>
-                <li class="redborder" ng-repeat="user in usernames">{{user.name}} : {{user.msg}}</li>
+                <li class="redborder" ng-repeat="user in usernames">{{user}}</li>
             </ul>
         </div>
     </div>
+    
+    <div ng-controller="chatController" ng-show="grocerVis">
+        
+        <div id = "grocerBox">
+                <ul>
+                    <li ng-repeat="message in msglist">{{message.name}} : {{message.msg}} <button class="deleteMe" ng-click="removeItem($index)">Remove</button></li>
+                </ul>
+        </div>
+        
+        <div id="gusers">
+            <ul>
+                <li class="redborder" ng-repeat="user in usernames">{{user}}</li>
+            </ul>
+        </div>
+    </div>    
+    
     
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.1.1.js" integrity="sha256-16cdPddA6VdVInumRGo6IbivbERE8p7CQR3HzTBuELA=" crossorigin="anonymous"></script>
@@ -76,37 +117,56 @@
         var app = angular.module('list',[]);
         
         var userController = function($scope){
-            socket.emit('update chat vis' , false);
+            //socket.emit('update chef vis' , false);
             $scope.visible = true;
             
             $scope.setName = (e)=>{
                 e.preventDefault();
+                var name = $scope.username.toUpperCase();
                 socket.emit('new user', $scope.username ,function(data){
                                 
                                 if(data){
-                                    console.log(data);
+                                    //console.log(name);
                                     $scope.visible = false;
-                                    socket.emit('update chat vis' , true);
+                                    if(name == "CHEF"){
+                                        socket.emit('update chef vis' , true);
+                                    }
+        
+                                    else {
+                                        socket.emit('update grocer vis' , true);
+                                        //console.log("else : "+name);
+                                    }                                        
                                 }
                                 else {
                                     $scope.errormsg = "Username is already taken";
                                 }
+                                $scope.$digest();
                             });
                     $scope.username = "";
             };
-            socket.on('username' , function(data){
-                var usernames = data;
-                $scope.usernames = usernames;
-                //console.log($scope.usernames);
-            });
         };
         
         var chatController = function($scope){
             
             $scope.msglist = [];
-            socket.on('chatbox vis',function(data){
-                $scope.visible = data;
-                console.log("chat box: "+data)
+            $scope.usernames = [];
+            
+            socket.on('username' , function(data){
+                $scope.usernames = data;
+                $scope.$digest();
+                //console.log($scope.usernames);
+            });
+            
+            socket.on('chatbox chef vis',function(data){
+                $scope.visibleChef = data;
+                //console.log("chat box: "+data)
+                $scope.$digest();
+            });
+            
+            socket.on('chatbox grocer vis',function(data){
+                $scope.grocerVis = data;
+                //console.log("grocer box: "+data)
+                $scope.$digest();
             });
             
             $scope.sendMsg = (e)=>{
@@ -117,9 +177,22 @@
             };
             
             socket.on('new message' , function(data){
-                console.log(data);
-                $scope.msglist = data;
+                //console.log(data);
+                $scope.msglist.push(data);
                 //chatlist.append('<li class="redborder" id="'+ data.id +'"> <b>'+ data.name +': </b>' +data.msg + '<button class="deleteMe">Remove</button> </li>');
+                $scope.$digest();
+            });
+            ////Check this code once for me please
+            $scope.removeItem = (index) =>{
+                //$scope.msglist.splice(index , 1);
+                socket.emit('bought item' , index);
+                console.log(index);
+            };
+        
+            socket.on('remove item' , function(data){
+                console.log("REmove item client" + data);
+                 $scope.msglist.splice(data , 1);
+                $scope.$digest();
             });
         };
         
